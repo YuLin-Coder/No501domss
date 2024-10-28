@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-离校登记信息</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../layui/css/public.css" media="all">
+    <style type="text/css">
+        .layui-form-item {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <fieldset class="table-search-fieldset">
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">去向</label>
+                            <div class="layui-input-inline">
+                                <select name="got" id="got" class="layui-input">
+                                    <option value="3" selected>全部</option>
+                                    <option value="0">留校</option>
+                                    <option value="1">回家</option>
+                                    <option value="2">外出</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <i class="layui-icon"></i>查 询
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <!-- 表格头部工具栏 -->
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+<!--                <button class="layui-btn layui-btn-sm layui-btn-danger data-count-delete" lay-event="delete">-->
+<!--                    <i class="layui-icon layui-icon-delete"></i>批量删除-->
+<!--                </button>-->
+                <button id="exportExcel" class="layui-btn layui-btn-sm data-add-btn" lay-event="export">
+                    <i class="layui-icon layui-icon-file"></i>导出
+                </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-xs12 layui-col-md9" style="text-align: center;margin-top: 20px;">
+                <div id="echarts-pies" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../layui/js/lay-config.js?v=2.0.0" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table', 'layer', 'echarts'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            echarts = layui.echarts;
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/teacher/leave/list',
+            toolbar: '#toolbarDemo',
+            cols: [
+                [
+                    {type: "checkbox", width: 50},
+                    {field: 'id', width: 80, title: 'ID', align: "center"},
+                    {field: 'stuid', width: 120, title: '学号', align: "center"},
+                    {field: 'stuname', width: 100, title: '姓名', align: "center"},
+                    {field: 'studept', width: 150, title: '专业', align: "center"},
+                    {field: 'stuclass', width: 80, title: '班级', align: "center"},
+                    {field: 'stutel', width: 120, title: '手机号', align: "center"},
+                    {field: 'gotValue', width: 100, title: '去向', align: "center"},
+                    {field: 'dest', minWidth: 150, title: '目的地', align: "center"},
+                    {field: 'time', width: 120, title: '回校时间', align: "center"},
+                    {field: 'ectel', width: 150, title: '紧急联系人', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20, 30, 50],
+            limit: 5,
+            page: true,
+            skin: 'line',
+            even: true
+        });
+
+        $(function () {
+            getPieData();
+        });
+
+
+        /**
+         * 获取饼状图的数据
+         */
+        function getPieData() {
+            $.ajax({
+                type: "get",
+                url: "/teacher/leave/echartsData",
+                async: true,
+                dataType: "json",
+                success: function (data) {
+                    var stayIn = data.stayIn;
+                    var goHome = data.goHome;
+                    var goOut = data.goOut;
+                    var echartsPies = echarts.init(document.getElementById('echarts-pies'), 'walden');
+                    var optionPies = {
+                        title: {
+                            text: '学生节假日去向分布图',
+                            x: 'center'
+                        },
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: '{a} <br/>{b} : {c} ({d}%)'
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'right',
+                            data: ['留校', '回家', '外出']
+                        },
+                        series: [
+                            {
+                                name: '去向',
+                                type: 'pie',
+                                radius: '60%',
+                                center: ['50%', '50%'],
+                                roseType: 'radius',
+                                data: [
+                                    {value: stayIn, name: '留校'},
+                                    {value: goHome, name: '回家'},
+                                    {value: goOut, name: '外出'}
+                                ],
+                                emphasis: {
+                                    itemStyle: {
+                                        shadowBlur: 10,
+                                        shadowOffsetX: 0,
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    echartsPies.setOption(optionPies, true);
+                },
+                error: function () {
+                    layer.msg("网络错误！", {icon: 1});
+                }
+            });
+        }
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            console.log(data);
+            // 执行搜索重载
+            tableIns.reload({
+                where: data.field,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+
+        //表格头部工具栏触发事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            switch (obj.event) {
+                case 'delete':
+                    deleteById();
+                    break;
+                case "export":
+                    window.location.href = "/teacher/leave/export.action";
+                    break;
+            };
+        });
+
+
+        function deleteById() {
+            layer.confirm('确定删除吗？', {icon: 3, title: '提示'}, function (index) {
+                // 获取选中行的id，用来做后端的查询条件
+                var checkStatus = table.checkStatus('currentTableId');
+                var checkData = checkStatus.data;
+                var queryParams = [];
+                for (var i = 0; i < checkData.length; i++) {
+                    queryParams.push({"id": checkData[i].id});
+                }
+                var params = JSON.stringify(queryParams);
+                console.log(params);
+                // 发送ajax请求进行删除
+                $.post("/teacher/leave/delete", {"params": params}, function (result) {
+                    if (result.success) {
+                        tableIns.reload();
+                        // 更新饼状图
+                        getPieData();
+                    }
+                    layer.msg(result.msg);
+                }, "json");
+                layer.close(index);
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

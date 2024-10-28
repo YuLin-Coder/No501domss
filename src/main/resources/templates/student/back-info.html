@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-返校登记</title>
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../layui/css/public.css" media="all">
+    <link rel="stylesheet" href="../../layui/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <style type="text/css">
+        .rowBlock {
+            margin-top: 30px;
+        }
+
+        .rowBlock .layui-form-item {
+            display: inline-block;
+            width: 350px;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 表格头部工具栏 -->
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-sm data-add-btn" lay-event="add">
+                    <i class="layui-icon layui-icon-add-1"></i>填写返校信息
+                </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs data-count-edit" lay-event="edit">
+                <i class="layui-icon layui-icon-edit"></i>编辑</a>
+        </script>
+
+        <!-- 添加和修改窗口 -->
+        <div style="display: none;padding: 5px" id="addOrUpdateWindow">
+            <form class="layui-form" style="width:90%;" id="dataFrm" lay-filter="dataFrm">
+                <div class="rowBlock">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">是否延迟返校</label>
+                        <div class="layui-input-block">
+                            <select name="delay" id="delay" class="layui-input">
+                                <option value="0" selected>否</option>
+                                <option value="1">是</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">计划返校时间</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="time" id="time" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">延迟原因</label>
+                        <div class="layui-input-block" style="width: 400px;">
+                            <input type="hidden" name="id" class="layui-input">
+                            <textarea name="reason" id="reason" autocomplete="off" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="rowBlock">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">交通方式</label>
+                        <div class="layui-input-block">
+                            <select name="way" id="way" class="layui-input">
+                                <option value="0" selected>火车</option>
+                                <option value="1">高铁</option>
+                                <option value="2">飞机</option>
+                                <option value="3">大巴</option>
+                                <option value="4">其它</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">车次信息</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="trainnum" id="trainnum" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block" style="margin-right: 110px;text-align: center;margin-top: 10px;">
+                        <button class="layui-btn" type="button" lay-submit lay-filter="doSubmit">
+                            <span class="layui-icon">提交</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="../../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table', 'layer', 'laydate'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            laydate = layui.laydate;
+
+        var dateIns = laydate.render({
+            elem: "#time" //指定元素
+        });
+
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/student/back/list',
+            toolbar: '#toolbarDemo',
+            cols: [
+                [
+                    {field: 'id', title: 'ID', hide: true},
+                    {field: 'delay', width: 170, title: '是否延迟返校', align: "center"},
+                    {field: 'reason', minWidth: 300, title: '延迟原因'},
+                    {field: 'time', width: 150, title: '计划返校时间', align: "center"},
+                    {field: 'way', width: 150, title: '交通方式', align: "center"},
+                    {field: 'trainnum', width: 150, title: '车次信息', align: "center"},
+                    {title: '操作', width: 150, toolbar: '#currentTableBar', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20],
+            limit: 5,
+            page: true,
+            skin: 'line',
+            even: true
+        });
+
+        var url;
+        var windowIndex;//窗口的索引
+
+        // 打开添加窗口
+        function openAddWindow() {
+            windowIndex = layer.open({
+                type: 1,
+                title: "填写返校信息",
+                area: ["800px", "420px"],
+                content: $("#addOrUpdateWindow"),
+                success: function () {
+                    $("#dataFrm")[0].reset();
+                    url = "/student/back/add";
+                }
+            });
+        }
+
+        //表格头部工具栏触发事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {
+                openAddWindow();
+            }
+            ;
+        });
+
+        // 监听行工具栏事件
+        table.on('tool(currentTableFilter)', function (obj) {
+            if (obj.event === 'edit') {
+                openUpdateWindow(obj.data);
+            }
+        });
+
+        /**
+         * 打开修改窗口
+         * @param data 当前行的数据
+         */
+        function openUpdateWindow(data) {
+            windowIndex = layer.open({
+                type: 1,
+                title: "修改返校信息",
+                area: ["800px", "420px"],
+                content: $("#addOrUpdateWindow"),
+                success: function () {
+                    // 表单数据回显
+                    form.val("dataFrm", data);
+                    var way = data.way;
+                    var delay = data.delay;
+                    $("#way").find('option:contains(' + way + ')').prop('selected', true);
+                    $("#delay").find('option:contains(' + delay + ')').prop('selected', true);
+                    form.render();
+                    url = "/student/back/update";
+                }
+            });
+        }
+
+        // 提交数据
+        form.on("submit(doSubmit)", function (data) {
+            var way = $("#way option:selected").text();
+            var delay = $("#delay option:selected").text();
+            data.field['way'] = way;
+            data.field['delay'] = delay;
+            console.log(data.field);
+
+            $.post(url, data.field, function (result) {
+                if (result.success) {
+                    tableIns.reload();
+                    layer.close(windowIndex);
+                    layer.msg(result.msg, {icon: 1});
+                } else {
+                    layer.msg(result.msg, {icon: 2});
+                }
+            }, "json");
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

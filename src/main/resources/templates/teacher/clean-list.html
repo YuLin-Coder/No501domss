@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-卫生检查情况</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../layui/css/public.css" media="all">
+    <link rel="stylesheet" href="../layui/lib/font-awesome-4.7.0/css/font-awesome.css">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <fieldset class="table-search-fieldset">
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">专业</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="studept" id="studept" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <div class="layui-input-inline">
+                                <select name="gradeType" id="gradeType" class="layui-input">
+                                    <option value="0" selected>全部</option>
+                                    <option value="1">不合格</option>
+                                    <option value="2">及格</option>
+                                    <option value="3">中等</option>
+                                    <option value="4">良好</option>
+                                    <option value="5">优秀</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <i class="layui-icon"></i>查 询
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+    </div>
+</div>
+<script src="../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+
+    layui.use(['form', 'table', 'layer'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            layer = layui.layer;
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/teacher/clean/list',
+            cols: [
+                [
+                    {field: 'stucollege', width: 150, title: '学院', align: "center"},
+                    {field: 'studept', width: 100, title: '专业', align: "center"},
+                    {field: 'stuclass', width: 100, title: '班级', align: "center"},
+                    {field: 'brarea', width: 100, title: '宿舍区', align: "center"},
+                    {field: 'brbid', width: 100, title: '楼栋', align: "center"},
+                    {field: 'brrid', width: 100, title: '寝室', align: "center"},
+                    {field: 'content', title: '检查内容', minWidth: 180},
+                    {field: 'grade', width: 80, title: '分数', align: "center"},
+                    {field: 'time', width: 150, title: '检查时间', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20, 25, 50, 100],
+            limit: 5,
+            page: true,
+            skin: 'line',
+            done: function (res, curr, count) {
+                var that = this.elem.next();
+                res.data.forEach(function (item, index) {
+                    if (item.grade < 60) {
+                        // var tr = that.find(".layui-table-box tbody tr[data-index='" + index + "']");
+                        // tr.css("background-color", "#ef4136");
+                        // tr.css("color", "white");
+                        var td = that.find(".layui-table-box tbody tr[data-index='" + index + "'] td[data-field='grade']");
+                        td.css("background-color", "#ef4136");
+                        td.css("color", "white");
+                    }
+                });
+            }
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var obj = {};
+            if (data.field.gradeType != null && data.field.gradeType != "") {
+                obj['grade'] = data.field.gradeType;
+            }
+            if (data.field.studept != null && data.field.studept != "") {
+                obj['studept'] = data.field.studept;
+            }
+            data.field = obj;
+            console.log(data.field);
+
+            //执行搜索重载
+            tableIns.reload({
+                where: data.field,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+    });
+</script>
+
+</body>
+</html>

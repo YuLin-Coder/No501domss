@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-离校登记</title>
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../layui/css/public.css" media="all">
+    <link rel="stylesheet" href="../../layui/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs data-count-edit" lay-event="edit"><i
+                    class="layui-icon layui-icon-edit"></i>编辑</a>
+        </script>
+
+        <!-- 登记 -->
+        <div class="registerDiv" id="registerDiv" style="width: 700px;margin: 60px auto 0px;">
+            <form class="layui-form layuimini-form" id="registerFrm" lay-filter="registerFrm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">去向</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <select name="got" id="got" class="layui-input">
+                            <option value="0" selected>留校</option>
+                            <option value="1">回家</option>
+                            <option value="2">外出</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">目的地</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="text" name="dest" id="dest" placeholder="外出需具体到市" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">回校时间</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <input type="text" name="time" id="time" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">紧急联系人</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <input type="text" name="ectel" id="ectel" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block" style="padding-left: 50px">
+                        <button class="layui-btn" type="button" lay-submit lay-filter="registerBtn">
+                            <span class="layui-icon">提交</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
+        <!-- 修改窗口 -->
+        <div style="display: none;padding: 5px" id="updateDiv">
+            <form class="layui-form" style="width:90%;" id="updateFrm" lay-filter="updateFrm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">去向</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <select name="got" class="layui-input">
+                            <option value="0" selected>留校</option>
+                            <option value="1">回家</option>
+                            <option value="2">外出</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">目的地</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="hidden" name="id" class="layui-input">
+                        <input type="text" name="dest" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">回校时间</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <input type="text" name="time" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">紧急联系人</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <input type="text" name="ectel" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block" style="padding-left: 200px;">
+                        <button class="layui-btn" type="button" lay-submit lay-filter="updateBtn">
+                            <span class="layui-icon">提交</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="../../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table', 'layer', 'laydate'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            laydate = layui.laydate;
+
+        var dateIns = laydate.render({
+            elem: "#time" //指定元素
+        });
+
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/student/leave/list',
+            cols: [
+                [
+                    {field: 'id', width: 80, title: 'ID', align: "center"},
+                    {field: 'gotValue', width: 170, title: '去向', align: "center"},
+                    {field: 'dest', minWidth: 300, title: '目的地'},
+                    {field: 'time', width: 200, title: '回校时间', align: "center"},
+                    {field: 'ectel', width: 150, title: '紧急联系人', align: "center"},
+                    {title: '操作', width: 150, toolbar: '#currentTableBar', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20],
+            limit: 5,
+            page: true,
+            skin: 'line',
+            even: true
+        });
+
+        // 提交登记信息
+        form.on("submit(registerBtn)", function (data) {
+            switch (data.field.got) {
+                case "0":
+                    break;
+                case "1":
+                case "2":
+                    var dest = $("#dest").val();
+                    var time = $("#time").val();
+                    var ectel = $("#ectel").val();
+                    if (dest == null || dest == '') {
+                        layer.msg("目的地不能为空！", {icon: 0});
+                        return false;
+                    }
+                    if (time == null || time == '') {
+                        layer.msg("回校时间不能为空！", {icon: 0});
+                        return false;
+                    }
+
+                    if (ectel == null || ectel == '') {
+                        layer.msg("紧急联系人不能为空！", {icon: 0});
+                        return false;
+                    }
+            }
+
+            layer.confirm("确定提交吗？", {icon: 3, title: '提示'}, function (index) {
+                $.post("/student/leave/add", data.field, function (result) {
+                    if (result.success) {
+                        tableIns.reload();
+                        $("#got").val(0);
+                        $("#dest").val("");
+                        $("#time").val("");
+                        $("#ectel").val("");
+                        layer.msg(result.msg, {icon: 1});
+                    } else {
+                        layer.msg(result.msg, {icon: 2});
+                    }
+                }, "json");
+                layer.close(index);
+            });
+            return false;
+        });
+
+        var url;
+        var windowIndex;//窗口的索引
+
+        // 监听行工具栏事件
+        table.on('tool(currentTableFilter)', function (obj) {
+            if (obj.event === 'edit') {
+                openUpdateWindow(obj.data);
+            }
+        });
+
+        /**
+         * 打开修改窗口
+         * @param data 当前行的数据
+         */
+        function openUpdateWindow(data) {
+            windowIndex = layer.open({
+                type: 1,
+                title: "修改离校登记信息",
+                area: ["730px", "330px"],
+                content: $("#updateDiv"),
+                success: function () {
+                    // 表单数据回显
+                    form.val("updateFrm", data);
+                    url = "/student/leave/update";
+                }
+            });
+        }
+
+        // 提交修改数据
+        form.on("submit(updateBtn)", function (data) {
+            console.log(data);
+            $.post(url, data.field, function (result) {
+                if (result.success) {
+                    tableIns.reload();
+                    layer.close(windowIndex);
+                    layer.msg(result.msg, {icon: 1});
+                } else {
+                    layer.msg(result.msg, {icon: 2});
+                }
+            }, "json");
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

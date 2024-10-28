@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-我的宿舍-报修列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../layui/css/public.css" media="all">
+    <link rel="stylesheet" href="../layui/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <style type="text/css">
+        #dataFrm .layui-form-item {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <blockquote class="layui-elem-quote">
+            <button class="layui-btn data-count-add" id="add" lay-event="add">
+                <i class="layui-icon layui-icon-add-circle"> 填写报修单</i>
+            </button>
+        </blockquote>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs data-count-edit" lay-event="edit">
+                <i class="layui-icon layui-icon-edit"></i>编辑
+            </a>
+        </script>
+
+        <!-- 添加和修改窗口 -->
+        <div style="display: none;padding: 5px" id="addOrUpdateWindow">
+            <form class="layui-form" style="width:90%;" id="dataFrm" lay-filter="dataFrm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">报修类型</label>
+                    <div class="layui-input-block" style="width: 160px;">
+                        <select name="type" id="type" class="layui-input">
+                            <option value="0">家具门窗</option>
+                            <option value="1">热水系统维修</option>
+                            <option value="2">风扇维修</option>
+                            <option value="3">空调维修</option>
+                            <option value="4">屋顶修补</option>
+                            <option value="5">水电类</option>
+                            <option value="6">其它</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">描述</label>
+                    <div class="layui-input-block">
+                        <textarea name="content" rows="3" lay-verify="required" autocomplete="off"
+                                  class="layui-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">联系方式</label>
+                    <div class="layui-input-block" style="width: 160px;">
+                        <input type="hidden" name="id" id="id">
+                        <input type="hidden" name="stuid" id="stuid">
+                        <input type="text" name="stutel" id="stutel" lay-verify="required" autocomplete="off"
+                               class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item layui-row layui-col-xs12">
+                    <div class="layui-input-block" style="text-align: center;">
+                        <button type="button" class="layui-btn" lay-submit lay-filter="doSubmit"
+                                style="margin-right: 20px">
+                            <span class="layui-icon layui-icon-add-1"></span>提交
+                        </button>
+                        <button type="reset" class="layui-btn layui-btn-warm">
+                            <span class="layui-icon layui-icon-refresh-1"></span>重置
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table', 'layer'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            layer = layui.layer;
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/student/repair/list',
+            cols: [
+                [
+                    {field: 'id', title: 'ID', hide: true},
+                    {field: 'stuid', title: '学号', hide: true},
+                    {field: 'stuname', width: 130, title: '报修人', align: "center"},
+                    {field: 'stutel', width: 140, title: '联系方式', align: "center"},
+                    {field: 'type', width: 160, title: '报修类型', align: "center"},
+                    {field: 'content', minWidth: 100, title: '描述'},
+                    {field: 'status', width: 120, title: '维修状态', align: "center"},
+                    {field: 'subtime', width: 130, title: '提交日期', align: "center"},
+                    {title: '操作', width: 100, toolbar: '#currentTableBar', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20, 25, 50, 100],
+            limit: 5,
+            page: true,
+            skin: 'line',
+            even: true,
+            done: function (res, curr, count) {
+                var that = this.elem.next();
+                res.data.forEach(function (item, index) {
+                    if (item.status == "已处理") {
+                        var td = that.find(".layui-table-box tbody tr[data-index='" + index + "'] td[data-field='status']");
+                        td.css("background-color", "#45b97c");
+                        td.css("color", "white");
+                    }
+                });
+            }
+        });
+
+        // 行工具栏监听
+        table.on('tool(currentTableFilter)', function (obj) {
+            if (obj.event === 'edit') {
+                var data = obj.data;
+                if (data.status == "未处理") {
+                    openUpdateWindow(data);
+                } else {
+                    var msg = "该报修单" + data.status + "，不允许修改！";
+                    layer.msg(msg, {icon: 5});
+                }
+            }
+        });
+
+        var windowIndex;
+        var url;
+
+        // 填写报修单点击事件
+        $("#add").on("click", function () {
+            windowIndex = layer.open({
+                type: 1,
+                title: "填写报修单",
+                area: ["500px", "450px"],
+                content: $("#addOrUpdateWindow"),
+                success: function (data) {
+                    $("#dataFrm")[0].reset();
+                    url = "/student/repair/add";
+                }
+            });
+        });
+
+        // 修改报修单
+        function openUpdateWindow(data) {
+            windowIndex = layer.open({
+                type: 1,
+                title: "修改报修单",
+                area: ["500px", "450px"],
+                content: $("#addOrUpdateWindow"),
+                success: function () {
+                    // 表单数据回显
+                    form.val("dataFrm", data);
+                    $("#type").find('option:contains(' + data.type + ')').prop('selected', true);
+                    form.render();
+                    url = "/student/repair/update";
+                }
+            });
+        }
+
+        // 监听添加窗口中表单提交事件
+        form.on("submit(doSubmit)", function (data) {
+            var type = $("#type option:selected").text();
+            data.field['type'] = type;
+            console.log(data);
+            $.post(url, data.field, function (result) {
+                if (result.success) {
+                    tableIns.reload();
+                    layer.close(windowIndex);
+                    layer.msg(result.msg, {icon: 1});
+                } else {
+                    layer.msg(result.msg, {icon: 2});
+                }
+            }, "json");
+            return false;
+        });
+    });
+</script>
+
+</body>
+</html>

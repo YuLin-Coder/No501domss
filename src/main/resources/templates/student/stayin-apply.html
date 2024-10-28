@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-留校申请</title>
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../layui/css/public.css" media="all">
+    <link rel="stylesheet" href="../../layui/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <style type="text/css">
+        .layui-table-cell {
+            text-align: center;
+            height: auto;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <blockquote class="layui-elem-quote">
+            <button class="layui-btn data-count-add" id="apply" lay-event="apply">
+                <i class="layui-icon layui-icon-add-circle"> 提交申请</i>
+            </button>
+        </blockquote>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-sm data-count-edit" lay-event="edit">
+                <i class="layui-icon layui-icon-edit"></i>编辑</a>
+        </script>
+
+        <script type="text/html" id="opinionImg">
+            <img src="{{d.opinion}}" alt="家长意见" style="width: 100px;height: 100px"/>
+        </script>
+
+        <!-- 提交申请和编辑 -->
+        <div style="display: none;padding: 5px" id="applyOrUpdateWindow">
+            <form class="layui-form layuimini-form" id="dataFrm" lay-filter="dataFrm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">留校原因</label>
+                    <div class="layui-input-block" style="width: 500px;">
+                        <input type="hidden" name="id" id="id">
+                        <textarea rows="3" name="reason" id="reason" autocomplete="off"
+                                  class="layui-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">留校截止时间</label>
+                    <div class="layui-input-block" style="width:200px;">
+                        <input type="text" name="time" id="time" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">家长意见</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="opinion" id="opinion">
+                        <div class="layui-upload">
+                            <button type="button" class="layui-btn" id="imgBtn">选择图片</button>
+                            <div class="layui-upload-list">
+                                <img class="layui-upload-img" width="150px" height="150px" id="imgPreview">
+                                <p id="imgText"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block" style="padding-right: 150px;text-align: center">
+                        <button class="layui-btn" id="submitBtn" type="button" lay-submit lay-filter="doSubmit">
+                            <span class="layui-icon">提交</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="../../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table', 'layer', 'laydate', 'upload', 'element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            laydate = layui.laydate,
+            upload = layui.upload,
+            element = layui.element;
+
+        var dateIns = laydate.render({
+            elem: "#time" //指定元素
+        });
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/student/stayin/list',
+            toolbar: '#toolbarDemo',
+            cols: [
+                [
+                    {field: 'id', width: 80, title: 'ID', align: "center"},
+                    {field: 'reason', minWidth: 200, title: '留校原因'},
+                    {field: 'time', width: 150, title: '留校截止时间'},
+                    {field: 'opinion', width: 250, title: '家长意见', align: "center", templet: "#opinionImg"},
+                    {field: 'approvetext', minWidth: 150, title: '教师意见'},
+                    {field: 'approveValue', width: 130, title: '审核结果', align: "center"},
+                    {title: '操作', width: 130, toolbar: '#currentTableBar', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20],
+            limit: 5,
+            page: true,
+            skin: 'line',
+            even: true,
+            done: function (res, curr, count) {
+                // 鼠标移动到图片上时放大显示
+                hoverOpenImg();
+                var that = this.elem.next();
+                res.data.forEach(function (item, index) {
+                    var td = that.find(".layui-table-box tbody tr[data-index='" + index + "'] td[data-field='approveValue']");
+                    switch (item.approveValue) {
+                        case "批准":
+                            td.css("color", "#009966");
+                            break;
+                        case "不批准":
+                            td.css("color", "#ef4136");
+                            break;
+                    }
+                });
+            }
+        });
+
+        function hoverOpenImg() {
+            var imgShow = null; // tips提示
+            $('td img').hover(function () {
+                var img = "<img src='" + $(this).attr('src') + "' style='width:100%;height: 100%' />";
+                imgShow = layer.tips(img, this, {
+                    tips: [2, 'rgba(41,41,41,.5)'],
+                    area: ["350px", "350px"]
+                });
+            }, function () {
+                layer.close(imgShow);
+            });
+        }
+
+        //图片上传
+        var uploadInst = upload.render({
+            elem: '#imgBtn',
+            url: '/student/stayin/uploadImage',
+            accept: 'images',
+            before: function (obj) {
+                //预读本地文件，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $('#imgPreview').attr('src', result);
+                });
+            },
+            done: function (res) {
+                if (res.code < 0) {
+                    return layer.msg('上传失败', {icon: 5});
+                }
+                $('#demoText').html('');
+                // 给隐藏输入框赋值，图片的url跟着表单一起提交
+                $("#opinion").attr("value", res.data.src);
+            },
+            error: function () {
+                //演示失败状态，并实现重传
+                var imgText = $('#imgText');
+                imgText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                imgText.find('.demo-reload').on('click', function () {
+                    uploadInst.upload();
+                });
+            }
+        });
+
+        var windowIndex;
+        var url;
+
+        // 监听行工具栏事件
+        table.on('tool(currentTableFilter)', function (obj) {
+            if (obj.event === 'edit') {
+                openUpdateWindow(obj.data);
+            }
+        });
+
+        // 打开提交申请窗口
+        $("#apply").on('click', function () {
+            windowIndex = layer.open({
+                type: 1,
+                title: "提交留校申请",
+                area: ["720px", "510px"],
+                content: $("#applyOrUpdateWindow"),
+                success: function (data) {
+                    $("#dataFrm")[0].reset();
+                    url = "/student/stayin/add";
+                }
+            });
+        });
+
+        // 打开修改窗口
+        function openUpdateWindow(data) {
+            windowIndex = layer.open({
+                type: 1,
+                title: "修改留校申请",
+                area: ["720px", "510px"],
+                content: $("#applyOrUpdateWindow"),
+                success: function () {
+                    console.log(data);
+                    // 表单数据回显
+                    form.val("dataFrm", data);
+                    $('#imgPreview').attr('src', data.opinion);
+                    url = "/student/stayin/update";
+                }
+            });
+        }
+
+        // 提交登记信息
+        form.on("submit(doSubmit)", function (data) {
+            console.log(data);
+            layer.confirm("确定提交吗？", {icon: 3, title: '提示'}, function (index) {
+                $.post(url, data.field, function (result) {
+                    if (result.success) {
+                        tableIns.reload();
+                        layer.close(windowIndex);
+                        layer.msg(result.msg, {icon: 1});
+                    } else {
+                        layer.msg(result.msg, {icon: 2});
+                    }
+                }, "json");
+                layer.close(index);
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

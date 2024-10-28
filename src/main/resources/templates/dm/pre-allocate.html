@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-预分配宿舍</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../layui/css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <blockquote class="layui-elem-quote">
+            <!--            <button class="layui-btn layui-btn-sm" id="partial">-->
+            <!--                <i class="layui-icon layui-icon-util"> 自动分配</i>-->
+            <!--            </button>-->
+            <button class="layui-btn layui-btn-sm" id="assignAll">
+                <i class="layui-icon layui-icon-util"> 批量分配</i>
+            </button>
+        </blockquote>
+        <fieldset class="table-search-fieldset" style="width: 37%;display: inline-block;margin-right: 3%;">
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">宿舍区</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="brarea" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">楼栋</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="brbid" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline" style="margin-left: 30px;">
+                            <button type="submit" class="layui-btn" lay-submit
+                                    lay-filter="search-room-btn"><i class="layui-icon"></i>查 询
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <fieldset class="table-search-fieldset" style="width: 45%;display: inline-block">
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">学院</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="stucollege" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">专业</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="studept" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline" style="margin-left: 30px;">
+                            <button type="submit" class="layui-btn" lay-submit
+                                    lay-filter="search-stu-btn"><i class="layui-icon"></i>查 询
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <div style="width: 40%;display: inline-block;margin-right: 3%;">
+            <table class="layui-hide" id="roomTable" lay-filter="roomTableFilter"></table>
+        </div>
+        <div style="width: 55%;display: inline-block">
+            <table class="layui-hide" id="studentTable" lay-filter="studentTableFilter"></table>
+        </div>
+        <div style="display: none" id="allocateResult">
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+        </div>
+    </div>
+</div>
+</div>
+<script src="../../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table', 'layer'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            table = layui.table;
+
+        var roomTableIns = table.render({
+            elem: '#roomTable',
+            url: '/dm/room/list',
+            cols: [
+                [
+                    {type: "checkbox", width: 50},
+                    {field: 'brcode', title: "宿舍编号", hide: true},
+                    {field: 'brarea', width: 110, title: '宿舍区', align: "center"},
+                    {field: 'brbid', width: 90, title: '楼栋', align: "center"},
+                    {field: 'brrid', width: 90, title: '寝室', align: "center"},
+                    {field: 'sex', width: 80, title: '性质', align: "center"},
+                    {field: 'free', width: 87, title: '空余数', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20, 30, 50],
+            limit: 10,
+            page: true,
+            skin: 'line'
+        });
+
+        var studentTableIns = table.render({
+            elem: '#studentTable',
+            url: '/dm/student/list',
+            cols: [
+                [
+                    {type: "checkbox", width: 50},
+                    {field: 'stuid', width: 120, title: '学号', align: "center"},
+                    {field: 'stucollege', minWidth: 140, title: '学院'},
+                    {field: 'studept', title: '专业', width: 130},
+                    {field: 'stuclass', width: 80, title: '班级'},
+                    {field: 'stuname', width: 90, title: '姓名'},
+                    {field: 'stusex', width: 80, title: '性别'}
+                ]
+            ],
+            limits: [5, 10, 20, 30, 50],
+            limit: 10,
+            page: true,
+            skin: 'line'
+        });
+
+        var tableIns = table.render({
+            elem: '#currentTableId',
+            url: '/dm/allocation/result',
+            cols: [
+                [
+                    {field: 'brcode', title: '宿舍编号', hide: true},
+                    {field: 'brarea', width: 120, title: '宿舍区', align: "center"},
+                    {field: 'brbid', width: 100, title: '楼栋', align: "center"},
+                    {field: 'brrid', width: 100, title: '寝室', align: "center"},
+                    {field: 'stuid', width: 180, title: '学号', align: "center"},
+                    {field: 'stuname', width: 200, title: '姓名'},
+                    {field: 'stucollege', minWidth: 150, title: '学院', align: "center"},
+                    {field: 'studept', title: '专业', width: 150, align: "center"},
+                    {field: 'stuclass', width: 120, title: '班级', align: "center"}
+                ]
+            ],
+            limits: [5, 10, 20, 30, 50],
+            limit: 5,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(search-room-btn)', function (data) {
+            console.log(data);
+            //执行搜索重载
+            roomTableIns.reload({
+                where: data.field,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+
+        form.on('submit(search-stu-btn)', function (data) {
+            console.log(data);
+            //执行搜索重载
+            studentTableIns.reload({
+                where: data.field,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+
+        $("#partial").on("click", function () {
+            var checkRoomStatus = table.checkStatus('roomTable');
+            var checkRoomData = checkRoomStatus.data;
+            var checkStudentStatus = table.checkStatus('studentTable');
+            var checkStudentData = checkStudentStatus.data;
+            doAllocate(checkRoomData, checkStudentData);
+        });
+
+        function doAllocate(roomData, studentData) {
+            var room = [];
+            var student = [];
+            $.each(roomData, function (i, item) {
+                room.push(JSON.stringify(item))
+            })
+            $.each(studentData, function (i, item) {
+                student.push(JSON.stringify(item))
+            })
+            $.ajax({
+                type: "post",
+                url: "/dm/allocation/doAllocate",
+                dataType: "json",
+                data: {"room": room, "student": student},
+                success: function (res) {
+                    console.log(res.msg);
+                },
+                error: function () {
+                    layer.msg("系统错误！", {icon: 2});
+                }
+            })
+        }
+
+        //全部分配
+        $("#assignAll").on("click", function () {
+            $.ajax({
+                type: "get",
+                url: "/dm/allocation/isEnough",
+                dataType: "json",
+                success: function (res) {
+                    if (res.success) {
+                        $.ajax({
+                            type: "get",
+                            url: "/dm/allocation/assignAll",
+                            dataType: "json",
+                            success: function (data) {
+                                if (data.success) {
+                                    layer.alert(data.msg, {icon: 1, title: "成功提示"});
+                                    $("#allocateResult").show();
+                                    tableIns.reload();
+                                } else {
+                                    layer.alert(data.msg, {icon: 2, title: "失败提示"});
+                                }
+                            },
+                            error: function () {
+                                layer.alert("网络异常，请稍后再试", {icon: 2, title: "失败提示"});
+                            }
+                        })
+                    } else {
+                        layer.alert(res.msg, {icon: 0, title: "提示"});
+                    }
+                }
+            })
+        })
+    });
+</script>
+
+</body>
+</html>

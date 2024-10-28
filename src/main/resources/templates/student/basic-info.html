@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>高校宿舍管理系统-基本资料</title>
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../layui/css/public.css" media="all">
+    <style type="text/css">
+        #basicFrm {
+            margin-left: 50px;
+        }
+
+        .readonlyStyle {
+            background: #fafafa;
+        }
+
+        .rowBlock {
+            margin-top: 20px;
+        }
+
+        .rowBlock .layui-form-item {
+            display: inline-block;
+            width: 350px;
+        }
+
+        .addressBlock .layui-form-item {
+            width: 550px;
+        }
+
+        .btnBlock .layui-input-block {
+            margin-right: 200px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <form class="layui-form layuimini-form" id="basicFrm" lay-filter="basicFrm">
+            <div class="rowBlock">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">学号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stuid" id="stuid" readonly class="layui-input readonlyStyle">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stuname" id="stuname" readonly class="layui-input readonlyStyle">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">性别</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stusex" id="stusex" readonly class="layui-input readonlyStyle">
+                    </div>
+                </div>
+            </div>
+            <div class="rowBlock">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">学院</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stucollege" id="stucollege" readonly class="layui-input readonlyStyle">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">专业</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="studept" id="studept" readonly class="layui-input readonlyStyle">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">班级</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stuclass" id="stuclass" readonly class="layui-input readonlyStyle">
+                    </div>
+                </div>
+            </div>
+            <div class="rowBlock">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">手机号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stutel" id="stutel" lay-verify="required" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">QQ</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stuqq" id="stuqq" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">微信号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stuwx" id="stuwx" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="rowBlock">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">监护人姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stututorname" id="stututorname" lay-verify="required"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">监护人联系方式</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stututortel" id="stututortel" lay-verify="required"
+                               class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="addressBlock">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">家庭住址</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stuaddress" id="stuaddress" lay-verify="required" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="btnBlock">
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn" type="button" lay-submit lay-filter="saveBtn">
+                            确认保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../layui/js/lay-config.js?v=2.0.0" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'miniTab'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            layer = layui.layer,
+            miniTab = layui.miniTab;
+
+        $(function () {
+            $.ajax({
+                url: "/student/basic/info",
+                dataType: "json",
+                type: "post",
+                success: function (result) {
+                    console.log(result);
+                    if (result.success) {
+                        form.val("basicFrm", result.data);
+                    } else {
+                        layer.msg(result.msg, {icon: 2})
+                    }
+                },
+                error: function () {
+                    layer.msg("网络异常！", {icon: 2})
+                }
+            });
+        })
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            console.log(data.field);
+            var url = "/student/basic/update";
+            $.post(url, data.field, function (result) {
+                if (result.success) {
+                    layer.msg(result.msg, {icon: 1}, function () {
+                        // form.render();
+                    });
+                } else {
+                    layer.msg(result.msg, {icon: 5});
+                }
+            }, "json");
+        });
+    });
+</script>
+</body>
+</html>

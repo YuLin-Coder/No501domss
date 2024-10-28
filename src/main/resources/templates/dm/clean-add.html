@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>高校管理系统-添加卫生检查记录</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="../../layui/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../layui/css/public.css" media="all">
+    <style type="text/css">
+        body {
+            background-color: #ffffff;
+        }
+
+        .rowBlock .layui-form-item {
+            display: inline-block;
+            width: 240px;
+        }
+
+        .contentBlock .layui-form-item {
+            width: 500px;
+            height: 130px;
+            display: inline-block;
+        }
+
+        .contentBlock textarea {
+            height: 120px;
+        }
+    </style>
+</head>
+<body>
+<div id="addCIDialog" class="layui-form layuimini-form">
+    <form class="layui-form" style="width:100%;" id="dataFrm" lay-filter="dataFrm">
+        <button class="layui-btn layui-btn-sm data-add-btn" id="addRow" lay-event="add"><i
+                class="layui-icon layui-icon-add-circle"></i>新增
+        </button>
+        <ul id="ciul">
+            <li id="ci-0">
+                <div class="rowBlock">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">宿舍区</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="brarea" id="brarea0" lay-verify="required" autocomplete="off"
+                                   class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">楼栋数</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="brbid" id="brbid0" lay-verify="number" autocomplete="off"
+                                   class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">寝室</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="brrid" id="brrid0" lay-verify="number" autocomplete="off"
+                                   class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">检查时间</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="time" id="time0" lay-verify="date" autocomplete="off"
+                                   class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">打分</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="grade" id="grade0" lay-verify="number" autocomplete="off"
+                                   class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="contentBlock">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">检查内容</label>
+                        <div class="layui-input-block">
+                            <textarea rows="3" name="content" id="content0" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <div class="layui-form-item layui-row">
+            <div class="layui-input-block" style="text-align: center;margin: 0;">
+                <button type="button" class="layui-btn" lay-submit lay-filter="doSubmit" style="margin-right: 20px">
+                    <span class="layui-icon layui-icon-release"></span>提交
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+</ul>
+</form>
+</div>
+<script src="../../layui/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    var rowIndex = 0;
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.jquery;
+
+        // 新增一行
+        $("#addRow").on('click', function () {
+            var datas = form.val('dataFrm');
+            console.log(datas);
+            // 如果上一条记录为空，提示先填完才能新增一行
+            if (datas.brarea == "" || datas.brbid == "" || datas.brrid == "" || datas.time == "" || datas.grade == "" || datas.content == "") {
+                return;
+            }
+
+            rowIndex++;
+            console.log(rowIndex);
+
+
+            var newRowHTML = '            <li id="ci-' + rowIndex + '">\n' +
+                '                <div class="rowBlock">\n' +
+                '                    <div class="layui-form-item">\n' +
+                '                        <label class="layui-form-label">宿舍区</label>\n' +
+                '                        <div class="layui-input-block">\n' +
+                '                            <input type="text" name="brarea" id="brarea' + rowIndex + '" lay-verify="required" autocomplete="off"\n' +
+                '                                   class="layui-input">\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="layui-form-item">\n' +
+                '                        <label class="layui-form-label">楼栋数</label>\n' +
+                '                        <div class="layui-input-block">\n' +
+                '                            <input type="text" name="brbid" id="brbid' + rowIndex + '" lay-verify="number" autocomplete="off"\n' +
+                '                                   class="layui-input">\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="layui-form-item">\n' +
+                '                        <label class="layui-form-label">寝室</label>\n' +
+                '                        <div class="layui-input-block">\n' +
+                '                            <input type="text" name="brrid" id="brrid' + rowIndex + '" lay-verify="number" autocomplete="off"\n' +
+                '                                   class="layui-input">\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="layui-form-item">\n' +
+                '                        <label class="layui-form-label">检查时间</label>\n' +
+                '                        <div class="layui-input-block">\n' +
+                '                            <input type="text" name="time" id="time' + rowIndex + '" lay-verify="date" autocomplete="off"\n' +
+                '                                   class="layui-input">\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="layui-form-item">\n' +
+                '                        <label class="layui-form-label">打分</label>\n' +
+                '                        <div class="layui-input-block">\n' +
+                '                            <input type="text" name="grade" id="grade' + rowIndex + '" lay-verify="number" autocomplete="off"\n' +
+                '                                   class="layui-input">\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                </div>\n' +
+                '                <div class="contentBlock">\n' +
+                '                    <div class="layui-form-item">\n' +
+                '                        <label class="layui-form-label">检查内容</label>\n' +
+                '                        <div class="layui-input-block">\n' +
+                '                            <textarea rows="3" name="content" id="content' + rowIndex + '" class="layui-textarea"></textarea>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div style="display: inline-block;float: right;margin-right: 600px;margin-top: 50px">\n' +
+                '                        <button class="layui-btn layui-btn-sm removeBtn" id="delete' + rowIndex + '">\n' +
+                '                            <i class="layui-icon layui-icon-reduce-circle"></i>删除\n' +
+                '                        </button>\n' +
+                '                    </div>\n' +
+                '                </div>\n' +
+                '            </li>';
+
+            $("#ciul").append(newRowHTML);
+            form.render();
+        });
+
+        $("body").on('click', '.removeBtn', function () {
+            var parentEle = $(this).parent().parent().parent();
+            parentEle.remove();
+        });
+
+        // 监听表单提交事件
+        form.on("submit(doSubmit)", function (data) {
+            var formDataList = [];
+            for (var i = 0; i <= rowIndex; i++) {
+                var brareaEle = document.getElementById("brarea" + i);
+                if (brareaEle != null && brareaEle != undefined) {
+                    var brarea = brareaEle.value;
+                    var brbid = document.getElementById("brbid" + i).value;
+                    var brrid = document.getElementById("brrid" + i).value;
+                    var time = document.getElementById("time" + i).value;
+                    var grade = document.getElementById("grade" + i).value;
+                    var content = document.getElementById("content" + i).value;
+                    formDataList.push({brarea:brarea,brbid:brbid,brrid:brrid,time:time,grade:grade,content:content});
+                }
+            }
+            console.log(formDataList);
+            var params = JSON.stringify(formDataList);
+
+            // 提交数据到后端
+            var url = "/dm/clean/add";
+            $.post(url,{params:params},function(result){
+                if(result.success){
+                    parent.tableIns.reload();
+                    var iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex);
+                }
+                layer.msg(result.msg,{time:2000});
+            },"json");
+        });
+    });
+</script>
+</body>
+</html>
